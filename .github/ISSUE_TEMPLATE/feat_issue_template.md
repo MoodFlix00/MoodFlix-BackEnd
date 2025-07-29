@@ -1,3 +1,17 @@
+---
+name: feat_issue_template
+about: Suggest an idea for this project
+title: ''
+labels: ''
+assignees: ''
+
+---
+
+---
+name: feat_template
+about: Suggest an idea for this project
+---
+
 ## 💡 어떤 기능인가요?
 
 > 어떤 기능을 추가할 건지 간단히 설명해 주세요!

@@ -1,3 +1,17 @@
+---
+name: bug_issue_template
+about: Create a report to help us improve
+title: ''
+labels: ''
+assignees: ''
+
+---
+
+---
+name: bug_template
+about: Create a report to help us improve
+---
+
 ## 🐛 현재 어떤 문제가 있나요? (As-Is)
 
 > 버그가 언제, 어디서, 어떤 상황에서 발생했는지 알려주세요!  
