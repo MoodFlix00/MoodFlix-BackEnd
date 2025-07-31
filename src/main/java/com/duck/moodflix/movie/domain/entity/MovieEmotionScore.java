@@ -1,4 +1,4 @@
-package com.duck.moodflix.users.domain.entity;
+package com.duck.moodflix.movie.domain.entity;
 
 import com.duck.moodflix.emotion.domain.entity.EmotionTag;
 import jakarta.persistence.*;
@@ -13,25 +13,25 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-        name = "user_emotion_scores",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"emotion_input_id", "tag_id"})
-)
+        name = "movie_emotion_scores",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"movie_id", "emotion_tag_id"})
+        )
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserEmotionScore {
+public class MovieEmotionScore {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tag_id", nullable = false)
-    private EmotionTag tag;
+    @JoinColumn(name = "movie_id", nullable = false)
+    private Movie movie;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "emotion_input_id", nullable = false)
-    private UserEmotionInput emotionInput;
+    @JoinColumn(name = "tag_id", nullable = false)
+    private EmotionTag tag;
 
     // score는 0.0~1.0 범위로, null 불가
     @Column(nullable = false)
@@ -54,4 +54,3 @@ public class UserEmotionScore {
         updatedAt = LocalDateTime.now();
     }
 }
-

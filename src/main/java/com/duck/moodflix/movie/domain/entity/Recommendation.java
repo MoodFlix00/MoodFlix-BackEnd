@@ -1,5 +1,7 @@
-package com.duck.moodflix.users.domain.entity;
+package com.duck.moodflix.movie.domain.entity;
 
+import com.duck.moodflix.users.domain.entity.User;
+import com.duck.moodflix.users.domain.entity.UserEmotionInput;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -32,5 +34,12 @@ public class Recommendation {
     private Movie movie;
 
     private Float similarityScore;
+
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 }

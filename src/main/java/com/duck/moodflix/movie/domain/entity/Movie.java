@@ -1,4 +1,4 @@
-package com.duck.moodflix.users.domain.entity;
+package com.duck.moodflix.movie.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -20,9 +20,10 @@ public class Movie {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private Long tmdbId;
 
-    @Column(length = 255)
+    @Column(length = 255, nullable = false)
     private String title;
 
     @Column(columnDefinition = "TEXT")
@@ -35,4 +36,16 @@ public class Movie {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }
+
