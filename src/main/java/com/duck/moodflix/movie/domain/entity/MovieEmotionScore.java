@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(
         name = "movie_emotion_scores",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"movie_id", "emotion_tag_id"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"movie_id", "tag_id"})
         )
 @Getter
 @Setter
