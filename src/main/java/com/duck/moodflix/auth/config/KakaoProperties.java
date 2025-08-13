@@ -1,4 +1,4 @@
-package com.duck.moodflix.test.config;
+package com.duck.moodflix.auth.config;
 
 import lombok.Getter;
 import lombok.Setter;
