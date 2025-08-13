@@ -1,5 +1,6 @@
 package com.duck.moodflix.users.domain.entity;
 
+import com.duck.moodflix.users.domain.entity.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -41,6 +42,9 @@ public class User {
     @Column(nullable = false, length = 20)
     private String provider;
 
+    @Enumerated(EnumType.STRING) // Enum 타입을 DB에 문자열로 저장
+    private UserStatus status = UserStatus.ACTIVE; // 사용자 상태, 기본값은 활성
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -61,5 +65,27 @@ public class User {
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 프로필 정보를 업데이트합니다.
+     */
+    public void updateProfile(String name, LocalDate birthDate, String gender, String profileImage) {
+        this.name = name;
+        this.birthDate = birthDate;
+        this.gender = gender;
+        this.profileImage = profileImage;
+    }
+
+    /**
+     * 비밀번호를 변경합니다. (암호화된 비밀번호를 받음)
+     */
+    public void changePassword(String encryptedPassword) {
+        this.password = encryptedPassword;
+    }
+
+
+    public void deleteAccount() {
+        this.status = UserStatus.DELETED;
     }
 }

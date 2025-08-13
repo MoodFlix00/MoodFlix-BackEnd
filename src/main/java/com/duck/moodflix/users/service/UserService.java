@@ -73,14 +73,14 @@ public class UserService {
 
     // [변경] 회원탈퇴 -> 계정 삭제
     @Transactional
-    public void deleteAccount(Long userId, String password) { // [변경] 메서드명: withdraw -> deleteAccount
+    public void deleteAccount(Long userId, String password) {
         User user = findUserById(userId);
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new InvalidPasswordException("비밀번호가 올바르지 않습니다.");
         }
 
-        user.deleteAccount(); // [변경] 엔티티 메서드 호출: user.withdraw() -> user.deleteAccount()
+        user.deleteAccount();
     }
 
 
