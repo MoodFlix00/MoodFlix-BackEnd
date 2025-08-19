@@ -1,113 +1,62 @@
 package com.duck.moodflix.users.controller;
 
-import com.duck.moodflix.users.domain.entity.User;
 import com.duck.moodflix.users.dto.*;
 import com.duck.moodflix.users.service.UserService;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
+
 import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserController {
+
     private final UserService userService;
 
     // 1. 회원정보 조회
     @GetMapping("/profile")
-    public ResponseEntity<?> getProfile(HttpSession session) {
-        User user = (User) session.getAttribute("loginUser");
-        if (user == null) {
-            return ResponseEntity.status(404).body(Map.of(
-                    "message", "사용자 정보를 찾을 수 없습니다.",
-                    "error", Map.of("code", "NOT_FOUND")
-            ));
-        }
-        // 여기는 getProfile(userId)를 호출하도록 변경하는 것이 더 좋습니다.
-        return ResponseEntity.ok(Map.of(
-                "data", userService.getProfile(user.getUserId())
-        ));
+    // [수정] HttpSession 대신 @AuthenticationPrincipal 사용
+    public ResponseEntity<UserProfileResponse> getProfile(@AuthenticationPrincipal UserDetails userDetails) {
+        // userDetails.getUsername()에는 JwtAuthenticationFilter에서 넣어준 사용자 ID(문자열)가 들어있습니다.
+        Long userId = Long.parseLong(userDetails.getUsername());
+        UserProfileResponse profile = userService.getProfile(userId);
+        return ResponseEntity.ok(profile);
     }
 
     // 2. 회원정보 수정
     @PutMapping("/profile")
-    public ResponseEntity<?> updateProfile(
-            @RequestBody UpdateUserProfileRequest dto,
-            HttpSession session) {
-        User user = (User) session.getAttribute("loginUser");
-        if (user == null) {
-            return ResponseEntity.status(404).body(Map.of(
-                    "message", "사용자 정보를 찾을 수 없습니다.",
-                    "error", Map.of("code", "NOT_FOUND")
-            ));
-        }
-        if (dto.getName() == null || dto.getName().isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "이름은 필수입니다.",
-                    "error", Map.of(
-                            "code", "VALIDATION_ERROR",
-                            "fields", List.of(Map.of("field", "name", "reason", "이름이 비어 있음"))
-                    )
-            ));
-        }
-
-        // [수정된 부분] user 객체 대신 user.getUserId()를 전달합니다.
-        ProfileEditResult updatedResult = userService.updateProfile(user.getUserId(), dto);
-
-        return ResponseEntity.ok(Map.of(
-                "message", "프로필이 수정되었습니다.",
-                "data", updatedResult
-        ));
+    // [수정] @Validated로 유효성 검사 자동화, HttpSession 제거
+    public ResponseEntity<ProfileEditResult> updateProfile(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Validated @RequestBody UpdateUserProfileRequest dto) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        ProfileEditResult updatedResult = userService.updateProfile(userId, dto);
+        return ResponseEntity.ok(updatedResult);
     }
 
     // 3. 비밀번호 변경
     @PutMapping("/password")
-    public ResponseEntity<?> changePassword(
-            @RequestBody ChangePasswordRequest dto,
-            HttpSession session) {
-        User user = (User) session.getAttribute("loginUser");
-        if (user == null) {
-            // 이 부분은 인증/인가 로직에서 처리하는 것이 더 일반적입니다.
-            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
-        }
-        try {
-            // [수정된 부분] user 객체 대신 user.getUserId()를 전달합니다.
-            userService.changePassword(user.getUserId(), dto);
-            return ResponseEntity.ok(Map.of(
-                    "message", "비밀번호가 변경되었습니다."
-            ));
-        } catch (UserService.InvalidPasswordException e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", e.getMessage(),
-                    "error", Map.of("code", "INVALID_PASSWORD")
-            ));
-        }
+    public ResponseEntity<Map<String, String>> changePassword(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Validated @RequestBody ChangePasswordRequest dto) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        userService.changePassword(userId, dto);
+        return ResponseEntity.ok(Map.of("message", "비밀번호가 변경되었습니다."));
     }
 
-    // 4. 계정 삭제 (비밀번호 입력)
-    @DeleteMapping("/profile")
-    public ResponseEntity<?> deleteAccount( // [변경] 메서드 이름을 deleteAccount로 수정
-                                            @RequestBody DeleteAccountRequest dto,
-                                            HttpSession session) {
-        User user = (User) session.getAttribute("loginUser");
-        if (user == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
-        }
-        try {
-            // [변경] userService의 deleteAccount 메서드를 호출
-            userService.deleteAccount(user.getUserId(), dto.getPassword());
-            session.invalidate(); // 계정 삭제 후 세션을 무효화합니다.
-            return ResponseEntity.ok(Map.of(
-                    "message", "계정 삭제가 완료되었습니다." // [변경] 메시지 내용 수정
-            ));
-        } catch (UserService.InvalidPasswordException e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "비밀번호가 올바르지 않습니다.",
-                    "error", Map.of("code", "INVALID_PASSWORD")
-            ));
-        }
+    // 4. 계정 삭제
+    @DeleteMapping
+    public ResponseEntity<Map<String, String>> deleteAccount(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Validated @RequestBody DeleteAccountRequest dto) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        userService.deleteAccount(userId, dto.getPassword());
+        // JWT 방식에서는 서버에서 할 일은 없으며, 클라이언트가 토큰을 삭제해야 합니다.
+        return ResponseEntity.ok(Map.of("message", "계정 삭제가 완료되었습니다."));
     }
 }

@@ -38,7 +38,7 @@ public class UserService {
     // 회원정보 수정
     @Transactional // (readOnly=false) - 데이터 변경이 있으므로 클래스 레벨의 설정을 덮어씁니다.
     public ProfileEditResult updateProfile(Long userId, UpdateUserProfileRequest dto) {
-        // 1. DB에서 사용자 정보를 조회합니다. 'user'는 영속성 컨텍스트가 관리하는 엔티티가 됩니다.
+        // 1. DB에서 사용자 정보를 조회합니다.
         User user = findUserById(userId);
         LocalDate birthDate = (dto.getBirthDate() != null && !dto.getBirthDate().isBlank()) ? LocalDate.parse(dto.getBirthDate()) : null;
 
