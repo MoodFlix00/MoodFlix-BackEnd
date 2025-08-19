@@ -1,11 +1,14 @@
 package com.duck.moodflix.users.domain.entity;
 
+import com.duck.moodflix.users.domain.entity.enums.Role;
 import com.duck.moodflix.users.domain.entity.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -45,6 +48,10 @@ public class User {
     @Enumerated(EnumType.STRING) // Enum 타입을 DB에 문자열로 저장
     private UserStatus status = UserStatus.ACTIVE; // 사용자 상태, 기본값은 활성
 
+    @Enumerated(EnumType.STRING) // Enum 이름을 DB에 문자열로 저장 ("USER", "ADMIN")
+    @Column(nullable = false)
+    private Role role;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -67,6 +74,13 @@ public class User {
         this.updatedAt = LocalDateTime.now();
     }
 
+    @Builder
+    public User(String email, String name, String provider) {
+        this.email = email;
+        this.name = name;
+        this.provider = provider;
+    }
+
     /**
      * 프로필 정보를 업데이트합니다.
      */
@@ -87,5 +101,8 @@ public class User {
 
     public void deleteAccount() {
         this.status = UserStatus.DELETED;
+        this.email = "deleted_" + this.email + "@deleted.com";
+        this.name = "탈퇴한사용자";
+        this.password = null;
     }
 }
