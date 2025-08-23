@@ -2,6 +2,8 @@ package com.duck.moodflix.users.controller;
 
 import com.duck.moodflix.users.dto.*;
 import com.duck.moodflix.users.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -11,26 +13,24 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+@Tag(name = "User API", description = "사용자 정보 관리 API")
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/users") // 기본 경로는 그대로 "/users"
 @RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
 
-    // 1. 회원정보 조회
-    @GetMapping("/profile")
-    // [수정] HttpSession 대신 @AuthenticationPrincipal 사용
+    @Operation(summary = "프로필 조회", description = "로그인된 사용자의 프로필 정보를 조회합니다.")
+    @GetMapping("/profile") // 엔드포인트 경로 유지
     public ResponseEntity<UserProfileResponse> getProfile(@AuthenticationPrincipal UserDetails userDetails) {
-        // userDetails.getUsername()에는 JwtAuthenticationFilter에서 넣어준 사용자 ID(문자열)가 들어있습니다.
         Long userId = Long.parseLong(userDetails.getUsername());
         UserProfileResponse profile = userService.getProfile(userId);
         return ResponseEntity.ok(profile);
     }
 
-    // 2. 회원정보 수정
-    @PutMapping("/profile")
-    // [수정] @Validated로 유효성 검사 자동화, HttpSession 제거
+    @Operation(summary = "프로필 수정", description = "로그인된 사용자의 프로필 정보를 수정합니다.")
+    @PutMapping("/profile") // 엔드포인트 경로 유지
     public ResponseEntity<ProfileEditResult> updateProfile(
             @AuthenticationPrincipal UserDetails userDetails,
             @Validated @RequestBody UpdateUserProfileRequest dto) {
@@ -39,8 +39,8 @@ public class UserController {
         return ResponseEntity.ok(updatedResult);
     }
 
-    // 3. 비밀번호 변경
-    @PutMapping("/password")
+    @Operation(summary = "비밀번호 변경", description = "로그인된 사용자의 비밀번호를 변경합니다.")
+    @PutMapping("/password") // 엔드포인트 경로 유지
     public ResponseEntity<Map<String, String>> changePassword(
             @AuthenticationPrincipal UserDetails userDetails,
             @Validated @RequestBody ChangePasswordRequest dto) {
@@ -49,14 +49,13 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "비밀번호가 변경되었습니다."));
     }
 
-    // 4. 계정 삭제
-    @DeleteMapping
+    @Operation(summary = "회원 탈퇴 (계정 삭제)", description = "로그인된 사용자의 계정을 삭제합니다.")
+    @DeleteMapping // 엔드포인트 경로 유지 (DELETE /users)
     public ResponseEntity<Map<String, String>> deleteAccount(
             @AuthenticationPrincipal UserDetails userDetails,
             @Validated @RequestBody DeleteAccountRequest dto) {
         Long userId = Long.parseLong(userDetails.getUsername());
         userService.deleteAccount(userId, dto.getPassword());
-        // JWT 방식에서는 서버에서 할 일은 없으며, 클라이언트가 토큰을 삭제해야 합니다.
         return ResponseEntity.ok(Map.of("message", "계정 삭제가 완료되었습니다."));
     }
 }
