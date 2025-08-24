@@ -21,6 +21,11 @@ public class JwtTokenProvider {
 
     public JwtTokenProvider(@Value("${jwt.secret.key}") String secretKey,
                             @Value("${jwt.expiration.ms}") long expirationMilliseconds) {
+        // [수정] JWT 비밀키의 길이가 최소 32바이트인지 검증
+        if (secretKey.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalArgumentException("JWT 비밀키는 최소 32바이트 이상이어야 합니다.");
+        }
+
         this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
         this.expirationMilliseconds = expirationMilliseconds;
     }
