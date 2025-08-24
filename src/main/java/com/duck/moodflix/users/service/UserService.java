@@ -1,6 +1,7 @@
 package com.duck.moodflix.users.service;
 
 import com.duck.moodflix.users.domain.entity.User;
+import com.duck.moodflix.users.domain.entity.enums.UserStatus;
 import com.duck.moodflix.users.dto.ChangePasswordRequest;
 import com.duck.moodflix.users.dto.ProfileEditResult;
 import com.duck.moodflix.users.dto.UpdateUserProfileRequest;
@@ -76,9 +77,19 @@ public class UserService {
     public void deleteAccount(Long userId, String password) {
         User user = findUserById(userId);
 
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new InvalidPasswordException("비밀번호가 올바르지 않습니다.");
+        // 이미 탈퇴한 계정인지 확인
+        if (user.getStatus() == UserStatus.DELETED) {
+            return;
         }
+
+        // [수정] 소셜 로그인 사용자와 자체 로그인 사용자의 탈퇴 로직 분기
+        if ("local".equals(user.getProvider())) {
+            // 자체 로그인(local) 사용자는 비밀번호 검증 필수
+            if (password == null || !passwordEncoder.matches(password, user.getPassword())) {
+                throw new InvalidPasswordException("비밀번호가 올바르지 않습니다.");
+            }
+        }
+        // 소셜 로그인 사용자는 비밀번호 검증을 건너뜀
 
         user.deleteAccount();
     }
