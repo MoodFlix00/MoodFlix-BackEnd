@@ -50,7 +50,7 @@ public class User {
 
     @Enumerated(EnumType.STRING) // Enum 이름을 DB에 문자열로 저장 ("USER", "ADMIN")
     @Column(nullable = false)
-    private Role role;
+    private Role role = Role.USER; // [수정] 기본값으로 Role.USER 설정
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
