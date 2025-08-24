@@ -22,7 +22,12 @@ public class KaKaoService {
     public String oAuthLogin(String accessCode) {
         KakaoTokenResponseDto oAuthToken = kakaoUtil.requestToken(accessCode);
         KakaoDto.KakaoProfile profile = kakaoUtil.requestProfile(oAuthToken);
-        String email = profile.getKakao_account().getEmail();
+        // [수정] 카카오 계정 및 이메일 Null 체크
+        KakaoDto.KakaoProfile.KakaoAccount kakaoAccount = profile.getKakao_account();
+        if (kakaoAccount == null || kakaoAccount.getEmail() == null) {
+            throw new IllegalArgumentException("카카오 계정에서 이메일 정보를 가져올 수 없습니다. 정보 제공에 동의했는지 확인해주세요.");
+        }
+        String email = kakaoAccount.getEmail();
 
         // findByEmail 결과가 없으면 User.builder()가 호출되며,
         // User 생성자에서 role이 자동으로 Role.USER로 설정됩니다.
