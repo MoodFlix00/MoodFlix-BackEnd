@@ -3,7 +3,7 @@ package com.duck.moodflix.users.service;
 import com.duck.moodflix.users.domain.entity.User;
 import com.duck.moodflix.users.domain.entity.enums.UserStatus;
 import com.duck.moodflix.users.dto.ChangePasswordRequest;
-import com.duck.moodflix.users.dto.ProfileEditResult;
+import com.duck.moodflix.users.dto.ProfileEditResponse;
 import com.duck.moodflix.users.dto.UpdateUserProfileRequest;
 import com.duck.moodflix.users.dto.UserProfileResponse;
 import com.duck.moodflix.users.repository.UserRepository;
@@ -38,7 +38,7 @@ public class UserService {
 
     // 회원정보 수정
     @Transactional // (readOnly=false) - 데이터 변경이 있으므로 클래스 레벨의 설정을 덮어씁니다.
-    public ProfileEditResult updateProfile(Long userId, UpdateUserProfileRequest dto) {
+    public ProfileEditResponse updateProfile(Long userId, UpdateUserProfileRequest dto) {
         // 1. DB에서 사용자 정보를 조회합니다.
         User user = findUserById(userId);
         LocalDate birthDate = (dto.getBirthDate() != null && !dto.getBirthDate().isBlank()) ? LocalDate.parse(dto.getBirthDate()) : null;
@@ -48,7 +48,7 @@ public class UserService {
 
         // 3. 메서드가 종료될 때 @Transactional에 의해 변경된 내용(Dirty Checking)이
         //    DB에 자동으로 UPDATE 쿼리로 반영됩니다. 따라서 save()가 필요 없습니다.
-        return ProfileEditResult.builder()
+        return ProfileEditResponse.builder()
                 .userId(user.getUserId())
                 .name(user.getName())
                 .profileImage(user.getProfileImage())

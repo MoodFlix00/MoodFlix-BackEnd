@@ -31,11 +31,11 @@ public class UserController {
 
     @Operation(summary = "프로필 수정", description = "로그인된 사용자의 프로필 정보를 수정합니다.")
     @PutMapping("/profile") // 엔드포인트 경로 유지
-    public ResponseEntity<ProfileEditResult> updateProfile(
+    public ResponseEntity<ProfileEditResponse> updateProfile(
             @AuthenticationPrincipal UserDetails userDetails,
             @Validated @RequestBody UpdateUserProfileRequest dto) {
         Long userId = Long.parseLong(userDetails.getUsername());
-        ProfileEditResult updatedResult = userService.updateProfile(userId, dto);
+        ProfileEditResponse updatedResult = userService.updateProfile(userId, dto);
         return ResponseEntity.ok(updatedResult);
     }
 

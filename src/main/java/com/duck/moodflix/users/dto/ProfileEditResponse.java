@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 @Schema(description = "프로필 수정 결과 응답 DTO")
-public class ProfileEditResult {
+public class ProfileEditResponse {
 
     @Schema(description = "사용자 고유 ID", example = "1")
     private Long userId;
