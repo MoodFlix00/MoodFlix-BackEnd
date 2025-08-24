@@ -5,6 +5,7 @@ import com.duck.moodflix.auth.dto.KakaoTokenResponseDto;
 import com.duck.moodflix.auth.util.JwtTokenProvider; // JWT 프로바이더 import
 import com.duck.moodflix.auth.util.KakaoUtil;
 import com.duck.moodflix.users.domain.entity.User;
+import com.duck.moodflix.users.domain.entity.enums.UserStatus;
 import com.duck.moodflix.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,10 +30,9 @@ public class KaKaoService {
         }
         String email = kakaoAccount.getEmail();
 
-        // findByEmail 결과가 없으면 User.builder()가 호출되며,
-        // User 생성자에서 role이 자동으로 Role.USER로 설정됩니다.
-        User user = userRepository.findByEmail(email)
-                .orElseGet(() -> userRepository.save(
+        // [수정] findByEmail 대신 findByEmailAndStatus를 사용하여 활성 사용자만 조회
+        User user = userRepository.findByEmailAndStatus(email, UserStatus.ACTIVE)
+                .orElseGet(()  -> userRepository.save(
                         User.builder()
                                 .email(email)
                                 .name(profile.getKakao_account().getProfile().getNickname())

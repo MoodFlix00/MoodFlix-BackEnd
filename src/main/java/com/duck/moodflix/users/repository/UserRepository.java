@@ -1,6 +1,7 @@
 package com.duck.moodflix.users.repository;
 
 import com.duck.moodflix.users.domain.entity.User;
+import com.duck.moodflix.users.domain.entity.enums.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -10,10 +11,11 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     /**
-     * 이메일을 기준으로 사용자를 조회합니다.
-     * @param email 사용자의 이메일 주소
-     * @return Optional<User> 조회된 사용자. 존재하지 않을 경우 Optional.empty() 반환
+     * [추가] 활성(ACTIVE) 상태인 사용자만 이메일로 조회합니다.
+     * @param email 조회할 이메일
+     * @param status UserStatus.ACTIVE 고정 사용
+     * @return Optional<User> 활성 사용자
      */
-    Optional<User> findByEmail(String email);
+    Optional<User> findByEmailAndStatus(String email, UserStatus status);
 
 }
