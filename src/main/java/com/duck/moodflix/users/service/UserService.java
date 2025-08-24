@@ -72,24 +72,25 @@ public class UserService {
         // 3. 메서드 종료 시 변경된 비밀번호가 DB에 자동으로 UPDATE 됩니다.
     }
 
-    // [변경] 회원탈퇴 -> 계정 삭제
     @Transactional
     public void deleteAccount(Long userId, String password) {
         User user = findUserById(userId);
 
-        // 이미 탈퇴한 계정인지 확인
+        // [수정] 이미 탈퇴된 계정 처리 (멱등성 보장)
         if (user.getStatus() == UserStatus.DELETED) {
-            return;
+            return; // 또는 예외를 발생시켜 클라이언트에게 알릴 수 있습니다.
         }
 
-        // [수정] 소셜 로그인 사용자와 자체 로그인 사용자의 탈퇴 로직 분기
-        if ("local".equals(user.getProvider())) {
-            // 자체 로그인(local) 사용자는 비밀번호 검증 필수
-            if (password == null || !passwordEncoder.matches(password, user.getPassword())) {
-                throw new InvalidPasswordException("비밀번호가 올바르지 않습니다.");
-            }
+        // [수정] 소셜 로그인 계정(비밀번호 없음) 처리
+        if (user.getPassword() == null) {
+            // 소셜 계정은 비밀번호로 탈퇴할 수 없음을 명확히 알림
+            throw new IllegalStateException("소셜 로그인 계정은 비밀번호로 탈퇴할 수 없습니다.");
         }
-        // 소셜 로그인 사용자는 비밀번호 검증을 건너뜀
+
+        // 자체 로그인 사용자의 경우, 비밀번호 검증
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new InvalidPasswordException("비밀번호가 올바르지 않습니다.");
+        }
 
         user.deleteAccount();
     }
