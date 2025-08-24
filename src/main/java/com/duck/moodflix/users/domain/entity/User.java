@@ -99,10 +99,15 @@ public class User {
     }
 
 
+    /**
+     * 계정을 삭제(비활성화) 상태로 처리하고 개인정보를 비식별화합니다.
+     */
     public void deleteAccount() {
         this.status = UserStatus.DELETED;
-        this.email = "deleted_" + this.email + "@deleted.com";
+        // [수정] 유효하고 유일한 이메일로 대체 (예: deleted_1@deleted.local)
+        this.email = "deleted_" + this.userId + "@deleted.local";
         this.name = "탈퇴한사용자";
         this.password = null;
+        this.deleted = true; // [추가] deleted 플래그 업데이트
     }
 }
