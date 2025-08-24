@@ -14,6 +14,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -34,28 +35,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = resolveToken(request);
 
-        if (token != null && jwtTokenProvider.validateToken(token)) {
-            Claims claims = jwtTokenProvider.getClaimsFromToken(token);
-            Long userId = Long.parseLong(claims.getSubject());
+        // [수정] 토큰 유효성, 기존 인증 여부 확인
+        if (token != null
+                && jwtTokenProvider.validateToken(token)
+                && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            // --- 🔽 이 부분 수정 ---
-            String role = claims.get("role", String.class);
-            Collection<? extends GrantedAuthority> authorities;
+            // [수정] NumberFormatException 예외 처리
+            try {
+                Claims claims = jwtTokenProvider.getClaimsFromToken(token);
+                Long userId = Long.parseLong(claims.getSubject());
+                String role = claims.get("role", String.class);
 
-            // role 클레임이 존재하는지 확인
-            if (StringUtils.hasText(role)) {
-                authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role));
-            } else {
-                // 역할 정보가 없는 토큰의 경우, 권한 없음을 명시하거나 기본 권한 부여
-                authorities = Collections.emptyList();
-                log.warn("JWT token for user '{}' does not contain 'role' claim.", userId);
+                Collection<? extends GrantedAuthority> authorities = Collections.emptyList();
+                if (StringUtils.hasText(role)) {
+                    authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role));
+                }
+
+                UserDetails userDetails = new User(userId.toString(), "", authorities);
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+
+                // [추가 개선] 요청 컨텍스트(IP 주소 등)를 인증 객체에 저장
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            } catch (NumberFormatException ex) {
+                log.warn("Invalid JWT subject (non-numeric). Ignoring token.", ex);
             }
-
-            UserDetails userDetails = new User(userId.toString(), "", authorities);
-
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
+
         filterChain.doFilter(request, response);
     }
 
@@ -67,7 +76,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // JwtAuthenticationFilter.java
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
-        log.info("Authorization Header: {}", bearerToken); // ◀ 로그 추가
+        if (log.isDebugEnabled()) {
+            log.debug("Authorization header present: {}", StringUtils.hasText(bearerToken));
+        }
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
