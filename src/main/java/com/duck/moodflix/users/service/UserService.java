@@ -76,20 +76,20 @@ public class UserService {
     public void deleteAccount(Long userId, String password) {
         User user = findUserById(userId);
 
-        // [수정] 이미 탈퇴된 계정 처리 (멱등성 보장)
+        // 이미 탈퇴한 계정 처리 (멱등성 보장)
         if (user.getStatus() == UserStatus.DELETED) {
-            return; // 또는 예외를 발생시켜 클라이언트에게 알릴 수 있습니다.
+            return;
         }
 
-        // [수정] 소셜 로그인 계정(비밀번호 없음) 처리
-        if (user.getPassword() == null) {
-            // 소셜 계정은 비밀번호로 탈퇴할 수 없음을 명확히 알림
-            throw new IllegalStateException("소셜 로그인 계정은 비밀번호로 탈퇴할 수 없습니다.");
-        }
-
-        // 자체 로그인 사용자의 경우, 비밀번호 검증
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new InvalidPasswordException("비밀번호가 올바르지 않습니다.");
+        // [수정] 자체 로그인(local) 계정인 경우에만 비밀번호를 검증합니다.
+        if (user.getPassword() != null) {
+            if (password == null || password.isBlank()
+                    || !passwordEncoder.matches(password, user.getPassword())) {
+                throw new InvalidPasswordException("비밀번호가 올바르지 않습니다.");
+            }
+        } else {
+            // 소셜 계정은 비밀번호 검증을 생략합니다.
+            // TODO: 향후 보안 강화를 위해 OAuth 재인증 토큰 검증 로직 추가 고려
         }
 
         user.deleteAccount();
