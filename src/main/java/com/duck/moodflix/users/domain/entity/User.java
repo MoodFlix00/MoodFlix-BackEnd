@@ -11,7 +11,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "users")
+@Table(
+        name = "users",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_user_email_provider", // 제약 조건 이름
+                columnNames = {"email", "provider"} // 유니크해야 할 컬럼 조합
+        )
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
