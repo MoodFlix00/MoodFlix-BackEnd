@@ -1,8 +1,9 @@
 package com.duck.moodflix.users.service;
 
 import com.duck.moodflix.users.domain.entity.User;
+import com.duck.moodflix.users.domain.entity.enums.UserStatus;
 import com.duck.moodflix.users.dto.ChangePasswordRequest;
-import com.duck.moodflix.users.dto.ProfileEditResult;
+import com.duck.moodflix.users.dto.ProfileEditResponse;
 import com.duck.moodflix.users.dto.UpdateUserProfileRequest;
 import com.duck.moodflix.users.dto.UserProfileResponse;
 import com.duck.moodflix.users.repository.UserRepository;
@@ -37,8 +38,8 @@ public class UserService {
 
     // 회원정보 수정
     @Transactional // (readOnly=false) - 데이터 변경이 있으므로 클래스 레벨의 설정을 덮어씁니다.
-    public ProfileEditResult updateProfile(Long userId, UpdateUserProfileRequest dto) {
-        // 1. DB에서 사용자 정보를 조회합니다. 'user'는 영속성 컨텍스트가 관리하는 엔티티가 됩니다.
+    public ProfileEditResponse updateProfile(Long userId, UpdateUserProfileRequest dto) {
+        // 1. DB에서 사용자 정보를 조회합니다.
         User user = findUserById(userId);
         LocalDate birthDate = (dto.getBirthDate() != null && !dto.getBirthDate().isBlank()) ? LocalDate.parse(dto.getBirthDate()) : null;
 
@@ -47,7 +48,7 @@ public class UserService {
 
         // 3. 메서드가 종료될 때 @Transactional에 의해 변경된 내용(Dirty Checking)이
         //    DB에 자동으로 UPDATE 쿼리로 반영됩니다. 따라서 save()가 필요 없습니다.
-        return ProfileEditResult.builder()
+        return ProfileEditResponse.builder()
                 .userId(user.getUserId())
                 .name(user.getName())
                 .profileImage(user.getProfileImage())
@@ -71,16 +72,27 @@ public class UserService {
         // 3. 메서드 종료 시 변경된 비밀번호가 DB에 자동으로 UPDATE 됩니다.
     }
 
-    // [변경] 회원탈퇴 -> 계정 삭제
     @Transactional
-    public void deleteAccount(Long userId, String password) { // [변경] 메서드명: withdraw -> deleteAccount
+    public void deleteAccount(Long userId, String password) {
         User user = findUserById(userId);
 
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new InvalidPasswordException("비밀번호가 올바르지 않습니다.");
+        // 이미 탈퇴한 계정 처리 (멱등성 보장)
+        if (user.getStatus() == UserStatus.DELETED) {
+            return;
         }
 
-        user.deleteAccount(); // [변경] 엔티티 메서드 호출: user.withdraw() -> user.deleteAccount()
+        // [수정] 자체 로그인(local) 계정인 경우에만 비밀번호를 검증합니다.
+        if (user.getPassword() != null) {
+            if (password == null || password.isBlank()
+                    || !passwordEncoder.matches(password, user.getPassword())) {
+                throw new InvalidPasswordException("비밀번호가 올바르지 않습니다.");
+            }
+        } else {
+            // 소셜 계정은 비밀번호 검증을 생략합니다.
+            // TODO: 향후 보안 강화를 위해 OAuth 재인증 토큰 검증 로직 추가 고려
+        }
+
+        user.deleteAccount();
     }
 
 

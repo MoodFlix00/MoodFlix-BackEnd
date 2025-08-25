@@ -1,4 +1,4 @@
-package com.duck.moodflix.test.dto;
+package com.duck.moodflix.auth.dto;
 
 import lombok.Getter;
 
