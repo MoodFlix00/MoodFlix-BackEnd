@@ -20,7 +20,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Java 17 환경 설정하기 (Gradle 빌드를 위해)
+      # 2. Java 21 환경 설정하기 (Gradle 빌드를 위해)
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
