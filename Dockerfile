@@ -6,6 +6,9 @@ FROM gradle:8.9-jdk17 AS builder
 WORKDIR /home/gradle/src
 
 # 빌드에 필요한 파일들을 먼저 복사하여 Docker 캐시를 활용합니다.
+# gradlew 파일과 gradle 폴더도 함께 복사해야 합니다.
+COPY gradlew ./
+COPY gradle ./gradle
 COPY build.gradle settings.gradle ./
 
 # Gradle을 사용하여 의존성을 다운로드합니다.
