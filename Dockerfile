@@ -1,6 +1,6 @@
 # ------------------ 1단계: 빌드 환경 (Builder) ------------------
 # Gradle과 Java 17이 포함된 이미지를 사용하여 빌드 환경을 구성합니다.
-FROM gradle:8.9-jdk17 AS builder
+FROM gradle:8.9-jdk21 AS builder
 
 # 작업 디렉토리를 지정합니다.
 WORKDIR /home/gradle/src

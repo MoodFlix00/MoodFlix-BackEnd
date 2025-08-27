@@ -21,10 +21,10 @@ jobs:
         uses: actions/checkout@v4
 
       # 2. Java 17 환경 설정하기 (Gradle 빌드를 위해)
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
 
       # 3. Gradle 빌드 권한 부여 및 실행
