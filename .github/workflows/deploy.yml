@@ -74,12 +74,11 @@ jobs:
             docker rm moodflix-container || true
             
             # 4. 새 이미지로 컨테이너 실행
-            # 4. 새 이미지로 컨테이너 실행
             docker run -d -p 80:8080 --name moodflix-container \
-              -e DB_URL=${{ secrets.DB_URL }} \
-              -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
-              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
               -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
               -e KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }} \
               -e TMDB_API_KEY=${{ secrets.TMDB_API_KEY }} \
+              -e DB_URL=${{ secrets.DB_URL }} \
+              -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
+              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
               ${{ steps.login-ecr.outputs.registry }}/${{ secrets.AWS_ECR_REPOSITORY }}:${{ github.sha }}
