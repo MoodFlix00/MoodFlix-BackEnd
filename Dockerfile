@@ -22,7 +22,7 @@ RUN ./gradlew build --no-daemon -x test
 # ------------------ 2단계: 실행 환경 (Runner) ------------------
 # 실제 애플리케이션을 실행하는 데 필요한 최소한의 환경만 사용합니다.
 # JRE(Java Runtime Environment)만 포함된 가벼운 이미지를 사용합니다.
-FROM openjdk:17-jre-slim
+FROM eclipse-temurin:17-jre-jammy
 
 # 작업 디렉토리를 지정합니다.
 WORKDIR /app
