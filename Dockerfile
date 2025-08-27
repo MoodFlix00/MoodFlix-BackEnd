@@ -13,7 +13,7 @@ COPY build.gradle settings.gradle ./
 RUN ./gradlew build --no-daemon || true
 
 # 나머지 소스 코드를 복사합니다.
-COPY . .
+COPY .github/workflows .
 
 # 테스트를 제외하고 애플리케이션을 빌드합니다.
 RUN ./gradlew build --no-daemon -x test
