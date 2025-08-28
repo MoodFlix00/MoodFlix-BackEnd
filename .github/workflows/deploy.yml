@@ -67,6 +67,22 @@ jobs:
           docker build -t $ECR_REGISTRY/${{ secrets.AWS_ECR_REPOSITORY }}:$IMAGE_TAG .
           docker push $ECR_REGISTRY/${{ secrets.AWS_ECR_REPOSITORY }}:$IMAGE_TAG
 
+        # 핑거프린트 사전 검증 스텝 — 배포 직전
+      - name: Verify host fingerprint
+        env:
+          SSH_HOST: ${{ secrets.EC2_HOST }}                # 예: 54.180.153.141 또는 도메인
+          SSH_PORT: ${{ secrets.EC2_SSH_PORT }}            # 없으면 비워두고, 아래에서 기본 22로 처리
+          EXPECT:   ${{ secrets.EC2_HOST_FINGERPRINT }}    # 예: SHA256:J1UBC...
+        run: |
+          set -euo pipefail
+          PORT="${SSH_PORT:-22}"
+          echo "Checking $SSH_HOST:$PORT ..."
+          ACTUAL="$(ssh-keyscan -T 5 -p "$PORT" -t ed25519 "$SSH_HOST" 2>/dev/null \
+            | ssh-keygen -lf - -E sha256 | awk '{print $2}')"
+          echo "expected=$EXPECT"
+          echo "actual  =$ACTUAL"
+          [ "$EXPECT" = "$ACTUAL" ] || { echo "Fingerprint mismatch"; exit 1; }
+
       # 8. EC2에 접속하여 새 Docker 이미지로 배포 (안정성 강화 버전)
       - name: Deploy to EC2 with Docker
         uses: appleboy/ssh-action@v1.0.3
