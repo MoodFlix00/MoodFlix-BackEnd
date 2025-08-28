@@ -28,7 +28,7 @@ WORKDIR /app
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
 # 빌더에서 생성된 JAR 복사 및 파일 소유권 변경
-COPY --chown=appuser:appgroup --from=builder /home/gradle/src/build/libs/*.jar /app/app.jar
+COPY --chown=appuser:appgroup --from=builder /home/gradle/src/build/libs/app.jar /app/app.jar
 
 # 생성한 사용자로 전환
 USER appuser
