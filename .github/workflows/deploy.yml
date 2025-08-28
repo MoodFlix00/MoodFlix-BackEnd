@@ -71,16 +71,12 @@ jobs:
       - name: Verify host fingerprint
         env:
           SSH_HOST: ${{ secrets.EC2_HOST }}                # 예: 54.180.153.141 또는 도메인
-          SSH_PORT: ${{ secrets.EC2_SSH_PORT }}            # 없으면 비워두고, 아래에서 기본 22로 처리
           EXPECT:   ${{ secrets.EC2_HOST_FINGERPRINT }}    # 예: SHA256:J1UBC...
         run: |
           set -euo pipefail
           PORT="${SSH_PORT:-22}"
           echo "Checking $SSH_HOST:$PORT ..."
-          ACTUAL="$(ssh-keyscan -T 5 -p "$PORT" -t ed25519 "$SSH_HOST" 2>/dev/null \
-            | ssh-keygen -lf - -E sha256 | awk '{print $2}')"
-          echo "expected=$EXPECT"
-          echo "actual  =$ACTUAL"
+          ACTUAL="$(ssh-keyscan -T 5 -p "$PORT" -t ed25519 "$SSH_HOST" 2>/dev/null | ssh-keygen -lf - -E sha256 | awk '{print $2}')"
           [ "$EXPECT" = "$ACTUAL" ] || { echo "Fingerprint mismatch"; exit 1; }
 
       # 8. EC2에 접속하여 새 Docker 이미지로 배포 (안정성 강화 버전)
@@ -91,6 +87,7 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           fingerprint: ${{ secrets.EC2_HOST_FINGERPRINT }}
+          # debug: true
           script: |
             # 셸 스크립트 오류 발생 시 즉시 중단
             set -Eeuo pipefail
