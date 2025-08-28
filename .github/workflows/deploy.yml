@@ -64,9 +64,10 @@ jobs:
       - name: Deploy to EC2 with Docker
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: 54.180.153.141
+          host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
+          fingerprint: ${{ secrets.EC2_HOST_FINGERPRINT }}
           script: |
             # 셸 스크립트 오류 발생 시 즉시 중단
             set -Eeuo pipefail
