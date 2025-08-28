@@ -8,8 +8,11 @@ COPY gradle/wrapper ./gradle/wrapper
 RUN chmod +x gradlew
 
 # 빌드 스크립트만 먼저 복사해서 의존성 캐시
-COPY build.gradle* settings.gradle* gradle.properties* ./
-# 의존성만 미리 내려 받아 캐시 (실패해도 캐시효과 위해 무시)
+COPY settings.gradle settings.gradle.kts build.gradle build.gradle.kts gradle.properties ./
+COPY gradle/wrapper ./gradle/wrapper
+COPY gradlew ./
+RUN chmod +x ./gradlew
+# 의존성만 미리 당겨 Docker 레이어 캐시 극대화
 RUN ./gradlew --no-daemon dependencies || true
 
 # 실제 소스 복사
