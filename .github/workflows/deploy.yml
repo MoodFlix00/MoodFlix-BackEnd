@@ -76,6 +76,11 @@ jobs:
               echo "awscli not found. Installing..."
               sudo yum -y install awscli || (sudo apt-get update && sudo apt-get -y install awscli)
             fi
+            
+            # Docker 엔진 확인(미설치 시 실패)
+            if ! command -v docker >/dev/null 2>&1; then
+              echo "docker not found. Please install Docker on the EC2 host."; exit 1
+            fi
 
             # 2) ECR 로그인
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
