@@ -101,7 +101,7 @@ jobs:
             # 6) Health check (최대 1분 대기)
             echo "Waiting for application to start..."
             for i in {1..30}; do
-              if curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
+              if curl -fsS http://localhost/actuator/health | grep -q '"status":"UP"'; then
                 echo "Health check successful!";
                 exit 0;
               fi;
