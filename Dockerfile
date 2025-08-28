@@ -1,5 +1,5 @@
 # ------------------ 1단계: 빌드 ------------------
-FROM gradle:8.9-jdk21 AS builder
+FROM gradle:8.10.2-jdk21 AS builder
 WORKDIR /home/gradle/src
 
 # 1. 빌드에 필요한 최소한의 파일만 먼저 복사합니다.
