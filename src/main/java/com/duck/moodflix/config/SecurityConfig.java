@@ -30,13 +30,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 🔽 이 한 줄을 추가하거나, 주석이 있다면 해제하세요.
                 .csrf(csrf -> csrf.disable())
-
-                // ... (cors, sessionManagement, authorizeHttpRequests 등 나머지 설정)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // 🔽 OPTIONS 메서드에 대한 요청은 인증 없이 모두 허용합니다. (CORS Preflight 요청 처리)
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/", "/index.html", "/error", "/favicon.ico",
                                 "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
