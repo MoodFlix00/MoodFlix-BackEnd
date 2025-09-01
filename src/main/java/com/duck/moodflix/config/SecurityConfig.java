@@ -1,6 +1,7 @@
 package com.duck.moodflix.config;
 
 import com.duck.moodflix.auth.config.JwtAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
