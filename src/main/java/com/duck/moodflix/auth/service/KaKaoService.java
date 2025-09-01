@@ -1,67 +1,71 @@
-package com.duck.moodflix.auth.service;
+package com.duck.moodflix.auth.service; // 패키지 경로는 실제 환경에 맞게 조정하세요.
 
-import com.duck.moodflix.auth.dto.KakaoDto;
-import com.duck.moodflix.auth.dto.KakaoTokenResponseDto;
-import com.duck.moodflix.auth.util.JwtTokenProvider; // JWT 프로바이더 import
-import com.duck.moodflix.auth.util.KakaoUtil;
+import com.duck.moodflix.auth.dto.KakaoUserInfoResponse;
+import com.duck.moodflix.auth.util.JwtTokenProvider;
 import com.duck.moodflix.users.domain.entity.User;
 import com.duck.moodflix.users.domain.entity.enums.Role;
 import com.duck.moodflix.users.domain.entity.enums.UserStatus;
 import com.duck.moodflix.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class KaKaoService {
 
-    private final KakaoUtil kakaoUtil;
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    // WebClient를 Bean으로 주입받거나 직접 생성하여 사용
+    private final WebClient webClient = WebClient.create();
 
     @Transactional
-    public String oAuthLogin(String accessCode) {
-        KakaoTokenResponseDto oAuthToken = kakaoUtil.requestToken(accessCode);
-        KakaoDto.KakaoProfile profile = kakaoUtil.requestProfile(oAuthToken);
+    public String oAuthLogin(String accessToken) {
+        // 1. 프론트에서 받은 액세스 토큰으로 카카오 서버에 사용자 정보를 요청합니다.
+        KakaoUserInfoResponse userInfo = getKakaoUserInfo(accessToken);
 
-        KakaoDto.KakaoProfile.KakaoAccount kakaoAccount = profile.getKakao_account();
-        if (kakaoAccount == null || kakaoAccount.getEmail() == null) {
-            throw new IllegalArgumentException("카카오 계정에서 이메일 정보를 가져올 수 없습니다.");
-        }
-        String email = kakaoAccount.getEmail();
+        // 2. 받아온 카카오 ID로 우리 DB에 이미 가입된 사용자인지 확인합니다.
+        Long kakaoId = userInfo.getId();
+        String email = userInfo.getKakaoAccount().getEmail();
         String provider = "kakao";
 
-        User user;
-        try {
-            // [수정] provider까지 조건에 추가하여 조회
-            user = userRepository.findByEmailAndProviderAndStatus(email, provider, UserStatus.ACTIVE)
-                    .orElseGet(() -> {
-                        String nickname = "카카오유저";
-                        if (kakaoAccount.getProfile() != null && kakaoAccount.getProfile().getNickname() != null) {
-                            nickname = kakaoAccount.getProfile().getNickname();
-                        }
-                        return userRepository.save(
-                                User.builder()
-                                        .email(email)
-                                        .name(nickname)
-                                        .provider(provider)
-                                        .role(Role.USER)
-                                        .status(UserStatus.ACTIVE)
-                                        .build()
-                        );
-                    });
-        } catch (DataIntegrityViolationException e) {
-            // [수정] 동시성 문제로 유니크 제약 조건 위반 시, 이미 저장된 사용자를 다시 조회
-            log.warn("Race condition occurred during user creation for email: {}", email);
-            user = userRepository.findByEmailAndProviderAndStatus(email, provider, UserStatus.ACTIVE)
-                    .orElseThrow(() -> new RuntimeException("Failed to retrieve user after race condition.", e));
-        }
+        // [수정] provider와 email로 사용자를 찾거나 새로 생성합니다.
+        User user = userRepository.findByEmailAndProvider(email, provider)
+                .orElseGet(() -> {
+                    String nickname = userInfo.getProperties().get("nickname");
+                    return userRepository.save(
+                            User.builder()
+                                    .email(email)
+                                    .name(nickname)
+                                    .provider(provider)
+                                    .kakaoId(kakaoId) // kakaoId 필드가 User 엔티티에 있어야 합니다.
+                                    .role(Role.USER)
+                                    .status(UserStatus.ACTIVE)
+                                    .build()
+                    );
+                });
 
-        // [수정] 사용자의 단일 role을 토큰 생성 메소드에 전달
+        // 3. 우리 서비스 전용 JWT를 생성하여 반환합니다.
         return jwtTokenProvider.generateToken(user.getUserId(), user.getRole());
+    }
+
+    private KakaoUserInfoResponse getKakaoUserInfo(String accessToken) {
+        String userInfoUrl = "https://kapi.kakao.com/v2/user/me";
+
+        return webClient.get()
+                .uri(userInfoUrl)
+                .header("Authorization", "Bearer " + accessToken)
+                .retrieve()
+                // 4xx, 5xx 에러 발생 시 예외를 던지도록 설정
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                        clientResponse -> clientResponse.bodyToMono(String.class)
+                                .map(body -> new RuntimeException("카카오 사용자 정보 조회 실패: " + body)))
+                .bodyToMono(KakaoUserInfoResponse.class)
+                .block(); // 비동기 응답을 동기적으로 기다립니다.
     }
 }
