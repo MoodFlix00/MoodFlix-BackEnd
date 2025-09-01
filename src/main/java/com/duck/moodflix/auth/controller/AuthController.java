@@ -21,9 +21,10 @@ public class AuthController {
      */
     // [수정] 불필요한 HttpServletRequest 파라미터 제거
     @PostMapping("/kakao")
-    public ResponseEntity<?> kakaoLogin(@RequestParam("code") String code) { // ✅ HttpServletRequest 제거
-        String accessToken = kaKaoService.oAuthLogin(code); // ✅ 서비스는 토큰을 반환
-        return ResponseEntity.ok(Map.of("accessToken", accessToken));
-    }
+    public ResponseEntity<?> kakaoLogin(@RequestBody Map<String, String> request) {
+        String accessToken = request.get("accessToken");
+        String jwtToken = kaKaoService.oAuthLogin(accessToken);
+        return ResponseEntity.ok(Map.of("accessToken", jwtToken));
+}
 
 }
