@@ -38,6 +38,9 @@ public class User {
     @Column(nullable = false, length = 50)
     private String name;
 
+    @Column(nullable = true, unique = true) // 카카오 ID는 유일
+    private Long kakaoId;
+
     @Column(length = 20)
     private String gender; // "M", "F"
 
