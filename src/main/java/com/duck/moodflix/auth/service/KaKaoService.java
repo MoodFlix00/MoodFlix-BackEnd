@@ -1,6 +1,7 @@
 package com.duck.moodflix.auth.service; // 패키지 경로는 실제 환경에 맞게 조정하세요.
 
 import com.duck.moodflix.auth.dto.KakaoUserInfoResponse;
+import com.duck.moodflix.auth.dto.LoginResponseDto;
 import com.duck.moodflix.auth.util.JwtTokenProvider;
 import com.duck.moodflix.users.domain.entity.User;
 import com.duck.moodflix.users.domain.entity.enums.Role;
@@ -25,7 +26,7 @@ public class KaKaoService {
     private final WebClient webClient = WebClient.create();
 
     @Transactional
-    public String oAuthLogin(String accessToken) {
+    public LoginResponseDto oAuthLogin(String accessToken) {
         // 1. 프론트에서 받은 액세스 토큰으로 카카오 서버에 사용자 정보를 요청합니다.
         KakaoUserInfoResponse userInfo = getKakaoUserInfo(accessToken);
 
@@ -50,8 +51,11 @@ public class KaKaoService {
                     );
                 });
 
-        // 3. 우리 서비스 전용 JWT를 생성하여 반환합니다.
-        return jwtTokenProvider.generateToken(user.getUserId(), user.getRole());
+        //  우리 서비스 전용 JWT 생성
+        String jwtToken = jwtTokenProvider.generateToken(user.getUserId(), user.getRole());
+
+        //  DTO에 토큰과 사용자 정보를 담아 반환
+        return new LoginResponseDto(jwtToken, user.getUserId(), user.getName());
     }
 
     private KakaoUserInfoResponse getKakaoUserInfo(String accessToken) {

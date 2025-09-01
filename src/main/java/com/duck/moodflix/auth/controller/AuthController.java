@@ -1,6 +1,7 @@
 package com.duck.moodflix.auth.controller;
 
 import com.duck.moodflix.auth.dto.KakaoLoginRequest;
+import com.duck.moodflix.auth.dto.LoginResponseDto;
 import com.duck.moodflix.auth.service.KaKaoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,11 +22,10 @@ public class AuthController {
      */
     // [수정] 불필요한 HttpServletRequest 파라미터 제거
     @PostMapping("/kakao")
-    public ResponseEntity<?> kakaoLogin(@RequestBody KakaoLoginRequest requestDto) {
-        // ✅ 서비스의 oAuthLogin 메서드가 이제 accessToken을 직접 받습니다.
-        String jwtToken = kaKaoService.oAuthLogin(requestDto.getAccessToken());
-
-        return ResponseEntity.ok(Map.of("accessToken", jwtToken));
+    public ResponseEntity<LoginResponseDto> kakaoLogin(@RequestBody KakaoLoginRequest requestDto) {
+        //  서비스의 oAuthLogin 메서드가 이제 accessToken을 직접 받습니다.
+        LoginResponseDto responseDto = kaKaoService.oAuthLogin(requestDto.getAccessToken());
+        return ResponseEntity.ok(responseDto);
     }
 
 }
