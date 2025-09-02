@@ -55,7 +55,7 @@ public class KaKaoService {
         String jwtToken = jwtTokenProvider.generateToken(user.getUserId(), user.getRole());
 
         //  DTO에 토큰과 사용자 정보를 담아 반환
-        return new LoginResponseDto(jwtToken, user.getUserId(), user.getName());
+        return new LoginResponseDto(jwtToken, user.getUserId(), user.getName(), user.getEmail());
     }
 
     private KakaoUserInfoResponse getKakaoUserInfo(String accessToken) {
