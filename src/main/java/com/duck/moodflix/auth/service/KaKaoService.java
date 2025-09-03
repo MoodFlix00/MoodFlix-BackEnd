@@ -32,19 +32,25 @@ public class KaKaoService {
 
         // 2. 받아온 카카오 ID로 우리 DB에 이미 가입된 사용자인지 확인합니다.
         Long kakaoId = userInfo.getId();
-        String email = userInfo.getKakaoAccount().getEmail();
+        String email = userInfo.getKakaoAccount() != null ? userInfo.getKakaoAccount().getEmail() : null;
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("카카오 이메일 동의가 필요합니다.");
+        }
         String provider = "kakao";
 
-        // [수정] provider와 email로 사용자를 찾거나 새로 생성합니다.
-        User user = userRepository.findByEmailAndProvider(email, provider)
+        //  [수정] kakaoId -> email 순으로 ACTIVE 상태의 사용자만 조회
+        User user = userRepository.findByKakaoIdAndStatus(kakaoId, UserStatus.ACTIVE)
+                .or(() -> userRepository.findByEmailAndProviderAndStatus(email, provider, UserStatus.ACTIVE))
                 .orElseGet(() -> {
-                    String nickname = userInfo.getProperties().get("nickname");
+                    String nickname = userInfo.getProperties() != null ? userInfo.getProperties().get("nickname") : null;
+                    String safeName = (nickname == null || nickname.isBlank()) ? "카카오사용자" : nickname;
+
                     return userRepository.save(
                             User.builder()
                                     .email(email)
-                                    .name(nickname)
+                                    .name(safeName)
                                     .provider(provider)
-                                    .kakaoId(kakaoId) // kakaoId 필드가 User 엔티티에 있어야 합니다.
+                                    .kakaoId(kakaoId)
                                     .role(Role.USER)
                                     .status(UserStatus.ACTIVE)
                                     .build()
