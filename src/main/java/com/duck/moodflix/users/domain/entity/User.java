@@ -38,6 +38,9 @@ public class User {
     @Column(nullable = false, length = 50)
     private String name;
 
+    @Column(nullable = true, unique = true) // 카카오 ID는 유일
+    private Long kakaoId;
+
     @Column(length = 20)
     private String gender; // "M", "F"
 
@@ -113,6 +116,7 @@ public class User {
         // [수정] 유효하고 유일한 이메일로 대체 (예: deleted_1@deleted.local)
         this.email = "deleted_" + this.userId + "@deleted.local";
         this.name = "탈퇴한사용자";
+        this.kakaoId = null; // ✅ [추가] 재가입을 위한 kakaoId 해제
         this.password = null;
         this.deleted = true; // [추가] deleted 플래그 업데이트
     }
