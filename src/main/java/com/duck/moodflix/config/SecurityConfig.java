@@ -1,6 +1,7 @@
 package com.duck.moodflix.config;
 
 import com.duck.moodflix.auth.config.JwtAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,13 +31,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 🔽 이 한 줄을 추가하거나, 주석이 있다면 해제하세요.
                 .csrf(csrf -> csrf.disable())
-
-                // ... (cors, sessionManagement, authorizeHttpRequests 등 나머지 설정)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // 🔽 OPTIONS 메서드에 대한 요청은 인증 없이 모두 허용합니다. (CORS Preflight 요청 처리)
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/", "/index.html", "/error", "/favicon.ico",
                                 "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
@@ -55,7 +55,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000"));
+
+        // 🔽 허용할 출처에 실제 프론트엔드 도메인을 추가합니다.
+        config.setAllowedOrigins(List.of("http://localhost:3000", "https://www.moodflix.store"));
+        
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

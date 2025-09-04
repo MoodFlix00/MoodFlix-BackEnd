@@ -15,7 +15,7 @@ import java.util.Map;
 
 @Tag(name = "User API", description = "사용자 정보 관리 API")
 @RestController
-@RequestMapping("/users") // 기본 경로는 그대로 "/users"
+@RequestMapping("/api/users") // 기본 경로는 그대로 "/users"
 @RequiredArgsConstructor
 public class UserController {
 

@@ -19,3 +19,5 @@ public class KakaoUserInfoResponse {
         // 필요한 다른 정보들 (프로필 등)이 있다면 추가
     }
 }
+
+
